@@ -23,18 +23,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Smooth scrolling for navigation links
-    const navLinks = document.querySelectorAll('a[href^="#"]');
+    const navLinks = document.querySelectorAll('a[href^="index.html#"], a[href^="#"]');
     
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
-            e.preventDefault();
+            const href = this.getAttribute('href');
+            const isExternal = href.startsWith('index.html');
+            const targetId = isExternal ? href.split('#')[1] : href.substring(1);
             
-            const targetId = this.getAttribute('href');
-            if (targetId === '#') return;
+            if (!targetId || targetId === '') return;
             
-            const targetElement = document.querySelector(targetId);
+            const targetElement = document.getElementById(targetId);
             
             if (targetElement) {
+                e.preventDefault();
                 const headerHeight = document.querySelector('header').offsetHeight;
                 const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight;
                 
@@ -42,21 +44,47 @@ document.addEventListener('DOMContentLoaded', () => {
                     top: targetPosition,
                     behavior: 'smooth'
                 });
+
+                // Update URL without jump
+                history.pushState(null, null, `#${targetId}`);
             }
         });
     });
 
     // Scroll effect for header
-    window.addEventListener('scroll', () => {
-        const header = document.querySelector('header');
+    const header = document.querySelector('header');
+    const handleScroll = () => {
         if (window.scrollY > 50) {
-            header.style.padding = '10px 0';
-            // In CSS it uses var(--bg-color), but JS style overrides might need care
-            // Let's rely on CSS transition and classes if possible, but keeping it simple:
-            header.style.boxShadow = '0 5px 15px rgba(0,0,0,0.1)';
+            header.style.padding = '5px 0';
+            header.style.background = 'var(--glass-bg)';
+            header.style.backdropFilter = 'blur(20px)';
         } else {
             header.style.padding = '0';
-            header.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+            header.style.background = 'var(--glass-bg)';
+            header.style.backdropFilter = 'blur(12px)';
         }
-    });
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial check
+
+    // Mobile menu toggle (simple version)
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', () => {
+            const navLinks = document.querySelector('.nav-links');
+            navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+            if (navLinks.style.display === 'flex') {
+                navLinks.style.flexDirection = 'column';
+                navLinks.style.position = 'absolute';
+                navLinks.style.top = '80px';
+                navLinks.style.left = '0';
+                navLinks.style.width = '100%';
+                navLinks.style.background = 'var(--glass-bg)';
+                navLinks.style.backdropFilter = 'blur(20px)';
+                navLinks.style.padding = '20px';
+                navLinks.style.borderBottom = '1px solid var(--glass-border)';
+            }
+        });
+    }
 });
